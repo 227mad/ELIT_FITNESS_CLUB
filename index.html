@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ELIT FITNESS CLUB</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Tahoma,sans-serif;background:#f3f4f6;color:#171717}
+header{background:#111;color:#fff;padding:18px 16px;position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:21px}header small{color:#bbb}
+nav{display:flex;gap:7px;overflow:auto;padding:10px;background:#fff;border-bottom:1px solid #ddd;position:sticky;top:67px;z-index:4}
+nav button{border:0;background:#eee;padding:10px 13px;border-radius:10px;white-space:nowrap;font-weight:bold}
+nav button.active{background:#111;color:#fff}
+main{max-width:900px;margin:auto;padding:16px}.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:#fff;border-radius:15px;padding:16px;box-shadow:0 2px 10px #0000000b}.card b{font-size:23px;display:block;margin-top:7px}.card small{font-size:14px;font-weight:normal}
+.green{color:#16833a}.red{color:#c62828}.muted{color:#777;font-size:13px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.action{padding:16px;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:bold}.in{background:#16833a}.out{background:#c62828}
+form,.panel{background:#fff;padding:16px;border-radius:15px;margin-top:12px}label{display:block;margin:10px 0 5px;font-weight:bold}input,select,textarea{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px}textarea{min-height:80px}
+.submit{margin-top:14px;width:100%;padding:13px;border:0;border-radius:10px;background:#111;color:#fff;font-size:16px;font-weight:bold}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}th,td{padding:10px;border-bottom:1px solid #eee;text-align:right;font-size:13px}th{background:#f1f1f1}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.pill{padding:5px 9px;border-radius:20px;background:#eee;font-size:12px}.search{margin:10px 0}
+.danger{color:#c62828}.success{color:#16833a}
+.empty{text-align:center;color:#777;padding:25px}
+@media(min-width:700px){.cards{grid-template-columns:repeat(4,1fr)}.actions{grid-template-columns:1fr 1fr 1fr 1fr}}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.modal-box{background:#fff;border-radius:16px;padding:18px;width:min(520px,100%);max-height:90vh;overflow:auto}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.secondary{background:#eee!important;color:#111!important}.icon-btn{border:0;border-radius:8px;padding:7px 9px;margin:2px;font-weight:bold}.edit-btn{background:#eee}.del-btn{background:#ffe1e1;color:#a00}</style>
+</head>
+<body>
+<header><h1>🥊 ELIT FITNESS CLUB</h1><small>نظام الحسابات والإدارة</small></header>
+<nav id="nav">
+<button data-page="home" class="active">الرئيسية</button>
+<button data-page="income">+ قبض</button>
+<button data-page="expense">− مصروف</button>
+<button data-page="members">المتدربون</button>
+<button data-page="reports">التقارير</button>
+</nav>
+<main>
+<section id="home" class="page active">
+<h2>لوحة اليوم</h2><div class="muted" id="today"></div>
+<div class="cards">
+<div class="card">قبض اليوم<b class="green" id="dIn">$0</b></div>
+<div class="card">مصروف اليوم<b class="red" id="dOut">$0</b></div>
+<div class="card">صافي اليوم<b id="dNet">$0</b></div>
+<div class="card">رصيد الصندوق<b id="balance">$0</b></div>
+</div>
+<div class="actions">
+<button class="action in" onclick="show('income')">+ تسجيل قبض</button>
+<button class="action out" onclick="show('expense')">− تسجيل مصروف</button>
+</div>
+<div class="panel"><h3>💳 مدفوعات خارجية</h3><div class="muted">المصاريف التي تدفعها خارج النادي مثل تحويلات، خدمات أو التزامات خارجية.</div><button class="submit" onclick="show('expense');setTimeout(()=>{$('outType').value='مدفوعات خارجية'},50)">+ تسجيل مدفوع خارجي</button></div>
+<div class="panel"><div class="row"><h3>آخر العمليات</h3><span class="pill" id="count">0 عملية</span></div><div id="recent"></div></div>
+</section>
+
+<section id="income" class="page">
+<h2>تسجيل قبض</h2>
+<form onsubmit="saveIncome(event)">
+<label>نوع القبض</label><select id="inType"><option>اشتراك شهري</option><option>اشتراك يومي</option><option>بيع مياه</option><option>اشتراك جديد</option><option>حصة / تدريب منفرد</option><option>أخرى</option></select>
+<label>المتدرب (اختياري)</label><input id="inMember" placeholder="اسم المتدرب">
+<label>المبلغ</label><input id="inAmount" type="number" min="0" step="0.01" required placeholder="مثلاً 30">
+<label>العملة</label><select id="inCurrency"><option value="USD">الدولار الأمريكي ($)</option><option value="LBP">الليرة اللبنانية (ل.ل)</option></select>
+<label>طريقة الدفع</label><select id="inMethod"><option>نقدًا</option><option>تحويل</option><option>أخرى</option></select>
+<label>ملاحظة</label><textarea id="inNote" placeholder="ملاحظة اختيارية"></textarea>
+<button class="submit">حفظ القبض</button></form>
+</section>
+
+<section id="expense" class="page">
+<h2>تسجيل مصروف</h2>
+<form onsubmit="saveExpense(event)">
+<label>نوع المصروف</label><select id="outType"><option>شراء مياه</option><option>معدات</option><option>كهرباء</option><option>إيجار</option><option>صيانة</option><option>تنظيف</option><option>مواصلات</option><option>مدفوعات خارجية</option><option>أخرى</option></select>
+<label>المبلغ</label><input id="outAmount" type="number" min="0" step="0.01" required placeholder="مثلاً 20">
+<label>العملة</label><select id="outCurrency"><option value="USD">الدولار الأمريكي ($)</option><option value="LBP">الليرة اللبنانية (ل.ل)</option></select>
+<label>طريقة الدفع</label><select id="outMethod"><option>نقدًا</option><option>تحويل</option><option>أخرى</option></select>
+<label>ملاحظة</label><textarea id="outNote" placeholder="ماذا دفعت؟"></textarea>
+<button class="submit">حفظ المصروف</button></form>
+</section>
+
+<section id="members" class="page">
+<h2>المتدربون</h2>
+<form onsubmit="saveMember(event)">
+<label>اسم المتدرب</label><input id="mName" required>
+<label>قيمة الاشتراك الشهري</label><input id="mFee" type="number" min="0" step="0.01" value="30">
+<label>عملة الاشتراك</label><select id="mCurrency"><option value="USD">الدولار الأمريكي ($)</option><option value="LBP">الليرة اللبنانية (ل.ل)</option></select>
+<label>تاريخ بداية الاشتراك</label><input id="mStart" type="date" required>
+<button class="submit">إضافة متدرب</button>
+</form>
+<input class="search" id="memberSearch" oninput="renderMembers()" placeholder="🔎 ابحث عن متدرب">
+<div class="panel"><div id="membersList"></div></div>
+</section>
+
+<section id="reports" class="page">
+<h2>التقارير</h2>
+<div class="panel">
+<label>الشهر</label><input id="reportMonth" type="month" onchange="renderReports()">
+</div>
+<div class="cards">
+<div class="card">إجمالي القبض<b class="green" id="rIn">$0</b></div>
+<div class="card">إجمالي المصروف<b class="red" id="rOut">$0</b></div>
+<div class="card">الصافي<b id="rNet">$0</b></div>
+<div class="card">عدد العمليات<b id="rCount">0</b></div>
+</div>
+<div class="panel"><h3>تفصيل الشهر</h3><div id="reportTable"></div></div>
+</section>
+</main>
+
+<div id="editModal" class="modal"><div class="modal-box"><h2>تعديل العملية</h2><form id="editForm"><input type="hidden" id="editId"><label>نوع العملية</label><select id="editType"></select><label>المتدرب</label><input id="editMember"><label>المبلغ</label><input id="editAmount" type="number" min="0" step="0.01" required><label>العملة</label><select id="editCurrency"><option value="USD">الدولار الأمريكي ($)</option><option value="LBP">الليرة اللبنانية (ل.ل)</option></select><label>طريقة الدفع</label><select id="editMethod"><option>نقدًا</option><option>تحويل</option><option>أخرى</option></select><label>ملاحظة</label><textarea id="editNote"></textarea><div class="modal-actions"><button type="button" class="submit secondary" id="cancelEdit">إلغاء</button><button class="submit">حفظ التعديل</button></div></form></div></div><script>
+const key='muaythai_accounts_v1';
+let db=JSON.parse(localStorage.getItem(key)||'{"transactions":[],"members":[]}');
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(key,JSON.stringify(db));}
+function money(n,c='USD'){return c==='LBP'?Number(n||0).toLocaleString('ar-LB')+' ل.ل':'$'+Number(n||0).toFixed(2)}
+function currName(c){return c==='LBP'?'ل.ل':'$'}
+function dateTime(){return new Date().toISOString()}
+function localDate(){let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function show(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));renderAll();scrollTo(0,0)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.page));
+function saveIncome(e){e.preventDefault();db.transactions.push({id:Date.now(),kind:'in',type:$('inType').value,member:$('inMember').value.trim(),amount:+$('inAmount').value,currency:$('inCurrency').value,method:$('inMethod').value,note:$('inNote').value.trim(),date:dateTime()});save();e.target.reset();alert('تم حفظ القبض');show('home')}
+function saveExpense(e){e.preventDefault();db.transactions.push({id:Date.now(),kind:'out',type:$('outType').value,amount:+$('outAmount').value,currency:$('outCurrency').value,method:$('outMethod').value,note:$('outNote').value.trim(),date:dateTime()});save();e.target.reset();alert('تم حفظ المصروف');show('home')}
+function saveMember(e){e.preventDefault();db.members.push({id:Date.now(),name:$('mName').value.trim(),fee:+$('mFee').value,currency:$('mCurrency').value,start:$('mStart').value});save();e.target.reset();$('mStart').value=localDate();renderMembers();alert('تمت إضافة المتدرب')}
+function fmtDate(x){return new Date(x).toLocaleString('ar-LB',{dateStyle:'short',timeStyle:'short'})}
+function renderHome(){
+ let today=localDate(), ts=db.transactions.filter(t=>t.date.slice(0,10)===today);
+ let usdIn=ts.filter(t=>t.kind==='in'&&(!t.currency||t.currency==='USD')).reduce((a,t)=>a+t.amount,0), usdOut=ts.filter(t=>t.kind==='out'&&(!t.currency||t.currency==='USD')).reduce((a,t)=>a+t.amount,0);
+ let lbpIn=ts.filter(t=>t.kind==='in'&&t.currency==='LBP').reduce((a,t)=>a+t.amount,0), lbpOut=ts.filter(t=>t.kind==='out'&&t.currency==='LBP').reduce((a,t)=>a+t.amount,0);
+ let allUsdIn=db.transactions.filter(t=>t.kind==='in'&&(!t.currency||t.currency==='USD')).reduce((a,t)=>a+t.amount,0), allUsdOut=db.transactions.filter(t=>t.kind==='out'&&(!t.currency||t.currency==='USD')).reduce((a,t)=>a+t.amount,0);
+ let allLbpIn=db.transactions.filter(t=>t.kind==='in'&&t.currency==='LBP').reduce((a,t)=>a+t.amount,0), allLbpOut=db.transactions.filter(t=>t.kind==='out'&&t.currency==='LBP').reduce((a,t)=>a+t.amount,0);
+ $('today').textContent=new Date().toLocaleDateString('ar-LB',{dateStyle:'full'});
+ $('dIn').innerHTML=money(usdIn)+'<br><small>'+money(lbpIn,'LBP')+'</small>';
+ $('dOut').innerHTML=money(usdOut)+'<br><small>'+money(lbpOut,'LBP')+'</small>';
+ $('dNet').innerHTML=money(usdIn-usdOut)+'<br><small>'+money(lbpIn-lbpOut,'LBP')+'</small>';
+ $('balance').innerHTML=money(allUsdIn-allUsdOut)+'<br><small>'+money(allLbpIn-allLbpOut,'LBP')+'</small>';
+ $('count').textContent=db.transactions.length+' عملية';
+ let arr=[...db.transactions].sort((a,b)=>b.id-a.id).slice(0,8);
+ $('recent').innerHTML=arr.length?'<table><tr><th>العملية</th><th>المبلغ</th><th>التاريخ</th><th>إدارة</th></tr>'+arr.map(t=>`<tr><td>${t.kind==='in'?'🟢 قبض':'🔴 مصروف'}<br><span class="muted">${t.type}${t.member?' — '+t.member:''}</span></td><td class="${t.kind==='in'?'success':'danger'}">${t.kind==='in'?'+':'-'}${money(t.amount,t.currency||'USD')}</td><td>${fmtDate(t.date)}</td><td><button class="icon-btn edit-btn" data-edit="${t.id}">تعديل</button><button class="icon-btn del-btn" data-del="${t.id}">حذف</button></td></tr>`).join('')+'</table>':'<div class="empty">لا توجد عمليات بعد.</div>';
+}
+function renderMembers(){
+ let q=($('memberSearch')?.value||'').toLowerCase(), arr=db.members.filter(m=>m.name.toLowerCase().includes(q));
+ $('membersList').innerHTML=arr.length?'<table><tr><th>المتدرب</th><th>الاشتراك</th><th>البداية</th><th>الحالة</th></tr>'+arr.map(m=>{let end=new Date(m.start);end.setMonth(end.getMonth()+1);let active=new Date()<=end;return `<tr><td><b>${m.name}</b></td><td>${money(m.fee,m.currency||'USD')}</td><td>${m.start}</td><td><span class="pill ${active?'success':'danger'}">${active?'فعال حتى '+end.toLocaleDateString('ar-LB'):'منتهي'}</span></td></tr>`}).join('')+'</table>':'<div class="empty">لا يوجد متدربون.</div>';
+}
+function renderReports(){
+ let month=$('reportMonth').value||localDate().slice(0,7);$('reportMonth').value=month;
+ let arr=db.transactions.filter(t=>t.date.slice(0,7)===month);
+ let usd=arr.filter(t=>(t.currency||'USD')==='USD'), lbp=arr.filter(t=>t.currency==='LBP');
+ let ui=usd.filter(t=>t.kind==='in').reduce((a,t)=>a+t.amount,0), uo=usd.filter(t=>t.kind==='out').reduce((a,t)=>a+t.amount,0);
+ let li=lbp.filter(t=>t.kind==='in').reduce((a,t)=>a+t.amount,0), lo=lbp.filter(t=>t.kind==='out').reduce((a,t)=>a+t.amount,0);
+ $('rIn').innerHTML=money(ui)+'<br><small>'+money(li,'LBP')+'</small>';
+ $('rOut').innerHTML=money(uo)+'<br><small>'+money(lo,'LBP')+'</small>';
+ $('rNet').innerHTML=money(ui-uo)+'<br><small>'+money(li-lo,'LBP')+'</small>';
+ $('rCount').textContent=arr.length;
+ $('reportTable').innerHTML=arr.length?'<table><tr><th>التاريخ</th><th>النوع</th><th>التفصيل</th><th>المبلغ</th><th>إدارة</th></tr>'+[...arr].sort((a,b)=>b.id-a.id).map(t=>`<tr><td>${fmtDate(t.date)}</td><td>${t.kind==='in'?'قبض':'مصروف'}</td><td>${t.type}${t.member?' — '+t.member:''}${t.note?' — '+t.note:''}</td><td class="${t.kind==='in'?'success':'danger'}">${t.kind==='in'?'+':'-'}${money(t.amount,t.currency||'USD')}</td><td><button class="icon-btn edit-btn" data-edit="${t.id}">تعديل</button><button class="icon-btn del-btn" data-del="${t.id}">حذف</button></td></tr>`).join('')+'</table>':'<div class="empty">لا توجد عمليات في هذا الشهر.</div>';
+}
+function openEdit(id){const t=db.transactions.find(x=>x.id===Number(id));if(!t)return;document.getElementById('editId').value=t.id;const opts=t.kind==='in'?['اشتراك شهري','اشتراك يومي','بيع مياه','اشتراك جديد','حصة / تدريب منفرد','أخرى']:['شراء مياه','معدات','كهرباء','إيجار','صيانة','تنظيف','مواصلات','مدفوعات خارجية','أخرى'];$('editType').innerHTML=opts.map(x=>`<option>${x}</option>`).join('');$('editType').value=t.type;$('editMember').value=t.member||'';$('editAmount').value=t.amount;$('editCurrency').value=t.currency||'USD';$('editMethod').value=t.method||'نقدًا';$('editNote').value=t.note||'';$('editModal').classList.add('show')}
+function closeEdit(){$('editModal').classList.remove('show')}
+function updateTransaction(e){e.preventDefault();const t=db.transactions.find(x=>x.id===Number($('editId').value));if(!t)return;t.type=$('editType').value;t.member=$('editMember').value.trim();t.amount=Number($('editAmount').value);t.currency=$('editCurrency').value;t.method=$('editMethod').value;t.note=$('editNote').value.trim();save();closeEdit();renderAll()}
+function deleteTransaction(id){const t=db.transactions.find(x=>x.id===Number(id));if(t&&confirm('هل أنت متأكد من حذف هذه العملية؟')){db.transactions=db.transactions.filter(x=>x.id!==Number(id));save();renderAll()}}
+function renderAll(){renderHome();renderMembers();renderReports()}
+$('mStart').value=localDate();$('reportMonth').value=localDate().slice(0,7);document.addEventListener('click',e=>{const ed=e.target.closest('[data-edit]');const dl=e.target.closest('[data-del]');if(ed)openEdit(ed.dataset.edit);if(dl)deleteTransaction(dl.dataset.del);if(e.target.id==='cancelEdit')closeEdit();if(e.target.id==='editModal')closeEdit()});$('editForm').addEventListener('submit',updateTransaction);renderAll();
+</script>
+</body></html>
